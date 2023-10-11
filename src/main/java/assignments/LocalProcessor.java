@@ -63,19 +63,13 @@ public final class LocalProcessor implements ScanningProcessor {
         return processorVersionBuilder.toString();
     }
 
-    private void requireNotNull(Object object) {
-        if (object == null) {
-            throw new IllegalStateException();
-        }
-    }
-
     @ListIteratorAnnotation
     @Override
     public void replaceAllStrings(@NonNull Collection<String> incomingStrings) {
         strings = new LinkedList<>(incomingStrings);
 
         incomingStrings.stream()
-                .peek(this::requireNotNull)
+                .filter(Objects::nonNull)
                 .map(Object::hashCode)
                 .forEach(hash -> Logger.getGlobal().fine(hash.toString()));
     }
@@ -83,10 +77,7 @@ public final class LocalProcessor implements ScanningProcessor {
     @FullNameProcessorGeneratorAnnotation
     @Override
     public String getFullProcessorName(@NonNull Collection<String> stringList) {
-        stringList
-                .stream()
-                .peek(this::requireNotNull)
-                .forEach(processorNameJoiner::add);
+        stringList.forEach(processorNameJoiner::add);
 
         return processorNameJoiner.toString();
     }
