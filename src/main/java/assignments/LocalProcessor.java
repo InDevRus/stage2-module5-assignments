@@ -30,8 +30,12 @@ public final class LocalProcessor implements ScanningProcessor {
     @Getter(AccessLevel.PUBLIC)
     private List<String> strings;
 
-    @Getter(AccessLevel.PUBLIC)
     private Scanner informationScanner;
+
+    @SuppressWarnings("unused")
+    public Scanner getInformationScanner() {
+        throw new IllegalStateException();
+    }
 
     @SuppressWarnings("unused")
     public LocalProcessor(
@@ -77,7 +81,10 @@ public final class LocalProcessor implements ScanningProcessor {
     @FullNameProcessorGeneratorAnnotation
     @Override
     public String getFullProcessorName(@NonNull Collection<String> stringList) {
-        stringList.forEach(processorNameJoiner::add);
+        stringList
+                .stream()
+                .filter(Objects::nonNull)
+                .forEach(processorNameJoiner::add);
 
         return processorNameJoiner.toString();
     }
@@ -85,8 +92,12 @@ public final class LocalProcessor implements ScanningProcessor {
     @ReadFullProcessorNameAnnotation
     @Override
     public void readFullProcessorVersion(File file) {
-        try {
-            this.informationScanner = new Scanner(file);
+        if (file == null) {
+            throw new IllegalStateException("File was null");
+        }
+
+        try (var scanner = new Scanner(file)) {
+            this.informationScanner = scanner;
 
             while (this.informationScanner.hasNext()) {
                 this.processorVersionBuilder.append(informationScanner.nextLine());
