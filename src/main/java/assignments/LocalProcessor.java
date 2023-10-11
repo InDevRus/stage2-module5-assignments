@@ -1,61 +1,91 @@
 package assignments;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.LinkedList;
-import java.util.Scanner;
-
 import assignments.annotations.FullNameProcessorGeneratorAnnotation;
 import assignments.annotations.ListIteratorAnnotation;
 import assignments.annotations.ReadFullProcessorNameAnnotation;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@Getter
-@Setter
-public class LocalProcessor {
-    private String processorName;
-    private Long period = 10000000000000L;
-    protected String ProcessorVersion;
-    private Integer valueofCheap;
-    Scanner informationscanner;
-    static LinkedList<String> stringArrayList = new LinkedList<>();
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 
-    public LocalProcessor(String processorName, Long period, String processorVersion, Integer valueOfCheap,
-                          Scanner informationscanner, LinkedList<String> stringArrayList) {
-        this.processorName = processorName;
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
+public final class LocalProcessor implements ScanningProcessor {
+    private final static String PROCESSOR_NAME_DELIMITER = " ";
+    private StringJoiner processorNameJoiner;
+
+    @Getter(AccessLevel.PUBLIC)
+    private long period;
+
+    @Getter(AccessLevel.PUBLIC)
+    private int valueOfCheap;
+
+    private StringBuilder processorVersionBuilder;
+
+    @Getter(AccessLevel.PUBLIC)
+    private Scanner informationScanner;
+
+    @Getter(AccessLevel.PUBLIC)
+    private List<String> strings;
+
+    @SuppressWarnings("unused")
+    public LocalProcessor(
+            @NonNull String processorName,
+            long period,
+            @NonNull String processorVersion,
+            int valueOfCheap,
+            @NonNull Scanner informationScanner,
+            @NonNull List<String> strings) {
+        this.processorNameJoiner = new StringJoiner(PROCESSOR_NAME_DELIMITER);
+        processorNameJoiner.add(processorName);
+
         this.period = period;
-        ProcessorVersion = processorVersion;
-        this.valueofCheap = valueOfCheap;
-        this.informationscanner = informationscanner;
-        this.stringArrayList = stringArrayList;
+
+        this.processorVersionBuilder = new StringBuilder(processorVersion);
+
+        this.valueOfCheap = valueOfCheap;
+        this.informationScanner = informationScanner;
+        this.strings = strings;
     }
 
-    public LocalProcessor() {
+    @SuppressWarnings("unused")
+    public String getProcessorName() {
+        return processorNameJoiner.toString();
+    }
+
+    @SuppressWarnings("unused")
+    public String getProcessorVersion() {
+        return processorVersionBuilder.toString();
     }
 
     @ListIteratorAnnotation
-    public void listiterator(LinkedList<String> stringList) {
-        stringArrayList = new LinkedList<>(stringList);
-        for (int i = 0; i < period; i++) {
-            System.out.println(stringArrayList.get(i).hashCode());
-        }
+    @Override
+    public void replaceAllStrings(@NonNull Collection<String> incomingStrings) {
+        strings = new LinkedList<>(incomingStrings);
+
+        incomingStrings.stream()
+                .map(Object::hashCode)
+                .forEach(System.out::println);
     }
 
     @FullNameProcessorGeneratorAnnotation
-    public String fullnameProcessorgenerator(LinkedList<String> stringList) {
-        for (int i = 0; i < stringArrayList.size(); i++) {
-            processorName+=stringList.get(i)+' ';
-        }
-        return processorName;
+    @Override
+    public String getFullProcessorName(@NonNull Collection<String> stringList) {
+        stringList.forEach(processorNameJoiner::add);
+
+        return processorNameJoiner.toString();
     }
 
     @ReadFullProcessorNameAnnotation
-    public void readfullprocessorname(File file) throws FileNotFoundException {
-            informationscanner = new Scanner(file);
-            while (informationscanner.hasNext()) {
-                ProcessorVersion+= informationscanner.nextLine();
-            }
+    @Override
+    public void readFullProcessorVersion(File file) throws FileNotFoundException {
+        informationScanner = new Scanner(file);
 
+        while (informationScanner.hasNext()) {
+            this.processorVersionBuilder.append(informationScanner.nextLine());
+        }
     }
 }
