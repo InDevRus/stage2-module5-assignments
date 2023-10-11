@@ -3,7 +3,6 @@ package assignments;
 import lombok.NonNull;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Collection;
 
 @SuppressWarnings("unused")
@@ -12,5 +11,5 @@ public interface ScanningProcessor {
 
     String getFullProcessorName(@NonNull Collection<String> stringList);
 
-    void readFullProcessorVersion(File file) throws FileNotFoundException;
+    void readFullProcessorVersion(File file);
 }

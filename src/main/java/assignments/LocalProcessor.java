@@ -10,11 +10,13 @@ import lombok.NonNull;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Logger;
 
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 public final class LocalProcessor implements ScanningProcessor {
-    private final static String PROCESSOR_NAME_DELIMITER = " ";
+    private static final String PROCESSOR_NAME_DELIMITER = " ";
     private StringJoiner processorNameJoiner;
 
     @Getter(AccessLevel.PUBLIC)
@@ -26,10 +28,10 @@ public final class LocalProcessor implements ScanningProcessor {
     private StringBuilder processorVersionBuilder;
 
     @Getter(AccessLevel.PUBLIC)
-    private Scanner informationScanner;
+    private List<String> strings;
 
     @Getter(AccessLevel.PUBLIC)
-    private List<String> strings;
+    private Scanner informationScanner;
 
     @SuppressWarnings("unused")
     public LocalProcessor(
@@ -67,8 +69,9 @@ public final class LocalProcessor implements ScanningProcessor {
         strings = new LinkedList<>(incomingStrings);
 
         incomingStrings.stream()
+                .filter(Objects::nonNull)
                 .map(Object::hashCode)
-                .forEach(System.out::println);
+                .forEach(hash -> Logger.getGlobal().fine(hash.toString()));
     }
 
     @FullNameProcessorGeneratorAnnotation
@@ -81,11 +84,17 @@ public final class LocalProcessor implements ScanningProcessor {
 
     @ReadFullProcessorNameAnnotation
     @Override
-    public void readFullProcessorVersion(File file) throws FileNotFoundException {
-        informationScanner = new Scanner(file);
+    public void readFullProcessorVersion(File file) {
+        try {
+            this.informationScanner = new Scanner(file);
 
-        while (informationScanner.hasNext()) {
-            this.processorVersionBuilder.append(informationScanner.nextLine());
+            while (this.informationScanner.hasNext()) {
+                this.processorVersionBuilder.append(informationScanner.nextLine());
+            }
+        } catch (FileNotFoundException exception) {
+            var message = "File {0} could not been found";
+            Logger.getGlobal().severe(MessageFormat.format(message, file.toString()));
+            throw new IllegalStateException(exception);
         }
     }
 }
